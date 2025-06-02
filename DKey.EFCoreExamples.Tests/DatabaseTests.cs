@@ -16,9 +16,9 @@ namespace DKey.EFCoreExamples.Tests
 
             using (var context = new AppDbContext(options))
             {
-                context.Database.EnsureDeleted();  // Delete if exists
-                context.Database.EnsureCreated();  // Create new
-
+                context.Database.EnsureDeleted();
+                Assert.IsFalse(context.Database.CanConnect());
+                context.Database.EnsureCreated();
                 Assert.IsTrue(context.Database.CanConnect());
             }
         }
