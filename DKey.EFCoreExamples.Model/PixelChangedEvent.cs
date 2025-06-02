@@ -1,0 +1,25 @@
+﻿namespace DKey.EFCoreExamples.Model;
+
+public class PixelChangedEvent
+{
+    public Guid Id { get; set; }
+    
+    public Guid PixelId { get; set; }
+    
+    public Guid OldOwnerUserId { get; set; }
+    public Guid UserId { get; set; }
+    
+    public int OldColorId { get; set; }
+    
+    public int NewColorId { get; set; }
+    
+    public DateTime ChangedAt { get; set; }
+    
+    
+    public Pixel? Pixel { get; set; }
+    
+    public User? OldOwnerUser { get; set; }
+    
+    public User? User { get; set; }
+
+}
