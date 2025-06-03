@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace DKey.EFCoreExamples.Model;
+namespace DKey.EFCoreExamples.Domain;
 
 public class Canvas
 {
@@ -16,6 +16,8 @@ public class Canvas
     public int Height { get; set; }
     
     public DateTime CreatedAt { get; set; }
+    
+    public DateTime UpdatedAt { get; set; }
     
     [MaxLength(128)]
     public string? PasswordHash { get; set; }  // Null if no password, hashed if protected

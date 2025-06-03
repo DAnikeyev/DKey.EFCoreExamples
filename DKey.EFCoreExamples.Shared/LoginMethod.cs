@@ -1,4 +1,4 @@
-﻿namespace DKey.EFCoreExamples.Model;
+﻿namespace DKey.EFCoreExamples.Shared;
 
 public enum LoginMethod
 {

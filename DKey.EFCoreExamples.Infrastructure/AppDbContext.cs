@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DKey.EFCoreExamples.Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace DKey.EFCoreExamples.Model;
 
@@ -11,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<LoginEvent> LoginEvents { get; set; }
     public DbSet<Color> Colors { get; set; }
     public DbSet<Canvas> Canvases { get; set; }
+    public DbSet<Subscription> Subscriptions { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -23,8 +25,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(u => u.Email).IsUnique();
             entity.Property(u => u.UserName);
             entity.Property(u => u.Email);
-            entity.Property(u => u.PasswordHash);
-            entity.Property(u => u.ProviderKey);
+            entity.Property(u => u.PasswordHashOrKey);
             entity.Property(u => u.CreatedAt);
             entity.HasMany(u => u.LoginEvents).WithOne(e => e.User).HasForeignKey(e => e.UserId);
             entity.HasMany(u => u.PixelChangedEvents).WithOne(e => e.User).HasForeignKey(e => e.UserId);
@@ -93,6 +94,7 @@ public class AppDbContext : DbContext
             entity.Property(c => c.Width);
             entity.Property(c => c.Height);
             entity.Property(c => c.CreatedAt);
+            entity.Property(c => c.UpdatedAt);
             entity.Property(c => c.PasswordHash);
             entity.HasMany(c => c.Pixels).WithOne(p => p.Canvas).HasForeignKey(p => p.CanvasId);
         });

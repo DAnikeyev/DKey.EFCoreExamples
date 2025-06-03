@@ -4,10 +4,16 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <RootNamespace>DKey.EFCoreExamples.Model</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="AutoMapper" Version="14.0.0" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.5" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\DKey.EFCoreExamples.Domain\DKey.EFCoreExamples.Domain.csproj" />
     </ItemGroup>
 
 </Project>

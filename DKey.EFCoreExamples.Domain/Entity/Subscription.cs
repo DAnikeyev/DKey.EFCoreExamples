@@ -1,6 +1,4 @@
-using System;
-
-namespace DKey.EFCoreExamples.Model;
+namespace DKey.EFCoreExamples.Domain;
 
 public class Subscription
 {

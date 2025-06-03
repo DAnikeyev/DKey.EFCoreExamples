@@ -22,7 +22,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\DKey.EFCoreExamples.Model\DKey.EFCoreExamples.Model.csproj" />
+      <ProjectReference Include="..\DKey.EFCoreExamples.Infrastructure\DKey.EFCoreExamples.Infrastructure.csproj" />
     </ItemGroup>
 
 </Project>

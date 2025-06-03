@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace DKey.EFCoreExamples.Model;
+namespace DKey.EFCoreExamples.Domain;
 
 public class Color
 {

@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using DKey.EFCoreExamples.Shared;
 
-namespace DKey.EFCoreExamples.Model;
+namespace DKey.EFCoreExamples.Domain;
 
 public class User
 {
@@ -12,11 +13,8 @@ public class User
     [MaxLength(64)]
     public required string Email { get; set; }      // Required, unique
     
-    [MaxLength(64)]
-    public string? PasswordHash { get; set; } // Null for external (Google) users
-    
     [MaxLength(128)]
-    public string? ProviderKey { get; set; }  // For Google: the "sub" claim; null for local users
+    public required string PasswordHashOrKey { get; set; } 
     
     public LoginMethod LoginMethod { get; set; } // Enum
     

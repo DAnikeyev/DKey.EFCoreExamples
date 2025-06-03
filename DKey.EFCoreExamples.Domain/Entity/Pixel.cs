@@ -1,4 +1,5 @@
-﻿namespace DKey.EFCoreExamples.Model;
+﻿
+namespace DKey.EFCoreExamples.Domain;
 
 public class Pixel
 {

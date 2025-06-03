@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using DKey.EFCoreExamples.Shared;
 
-namespace DKey.EFCoreExamples.Model;
+namespace DKey.EFCoreExamples.Domain;
 
 public class LoginEvent
 {
