@@ -2,6 +2,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using DKey.EFCoreExamples.Domain;
 using DKey.EFCoreExamples.Domain.Repository;
+using DKey.EFCoreExamples.Shared;
 using DKey.EFCoreExamples.Shared.DTO;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,11 +12,13 @@ public class SubscriptionRepository : ISubscriptionRepository
 {
     private readonly AppDbContext _context;
     private readonly IMapper _mapper;
+    private readonly IBalanceChangedEventRepository _balanceChangedEventRepository;
 
-    public SubscriptionRepository(AppDbContext context, IMapper mapper)
+    public SubscriptionRepository(AppDbContext context, IMapper mapper, IBalanceChangedEventRepository balanceChangedEventRepository)
     {
         _context = context;
         _mapper = mapper;
+        _balanceChangedEventRepository = balanceChangedEventRepository;
     }
 
     public async Task<IEnumerable<SubscriptionDto>> GetByUserIdAsync(Guid userId)
@@ -58,7 +61,8 @@ public class SubscriptionRepository : ISubscriptionRepository
         _context.Subscriptions.Add(subscription);
         await _context.SaveChangesAsync();
         await transaction.CommitAsync();
-
+        await _balanceChangedEventRepository.TryChangeBalanceAsync(userId, canvasId, 1, BalanceChangedReason.Subscription);
         return _mapper.Map<SubscriptionDto>(subscription);
     }
 }
+

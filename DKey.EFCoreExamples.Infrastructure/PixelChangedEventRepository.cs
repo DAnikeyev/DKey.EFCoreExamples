@@ -32,4 +32,20 @@ public class PixelChangedEventRepository : IPixelChangedEventRepository
             .Where(e => e.PixelId == pixelId)
             .ProjectTo<PixelChangedEventDto>(_mapper.ConfigurationProvider).ToListAsync();
     }
+
+    public async Task<IEnumerable<PixelChangedEventDto>> GetByCanvasIdAsync(Guid canvasId, DateTime? startDate)
+    {
+        var query = _context.PixelChangedEvents
+            .AsNoTracking()
+            .Where(e => e.Pixel.CanvasId == canvasId);
+
+        if (startDate.HasValue)
+        {
+            query = query.Where(e => e.ChangedAt >= startDate.Value);
+        }
+
+        return await query
+            .ProjectTo<PixelChangedEventDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
+    }
 }

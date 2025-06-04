@@ -7,7 +7,7 @@ public class BalanceChangedEventDto
     public Guid CanvasId { get; set; }
     public long OldBalance { get; set; }
     public long NewBalance { get; set; }
-    public string? Reason { get; set; }
+    public BalanceChangedReason Reason { get; set; }
     public DateTime ChangedAt { get; set; }
 }
 

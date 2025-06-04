@@ -10,4 +10,8 @@
       <ProjectReference Include="..\DKey.EFCoreExamples.Shared\DKey.EFCoreExamples.Shared.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="NLog" Version="5.4.0" />
+    </ItemGroup>
+
 </Project>

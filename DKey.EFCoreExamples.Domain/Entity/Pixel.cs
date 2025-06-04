@@ -15,6 +15,8 @@ public class Pixel
     
     public Guid CanvasId { get; set; }
     
+    public long Price { get; set; }
+    
     public User? Owner { get; set; }
     
     public Canvas? Canvas { get; set; }

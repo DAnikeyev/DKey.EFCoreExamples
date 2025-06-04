@@ -3,7 +3,9 @@ using AutoMapper.QueryableExtensions;
 using DKey.EFCoreExamples.Shared.DTO;
 using DKey.EFCoreExamples.Domain;
 using DKey.EFCoreExamples.Domain.Repository;
+using DKey.EFCoreExamples.Shared;
 using Microsoft.EntityFrameworkCore;
+using NLog;
 
 namespace DKey.EFCoreExamples.Model;
 
@@ -11,6 +13,7 @@ public class BalanceChangedEventRepository : IBalanceChangedEventRepository
 {
     private IMapper _mapper;
     private AppDbContext _context;
+    private readonly ILogger _logger = NLog.LogManager.GetCurrentClassLogger();
     
     public BalanceChangedEventRepository(AppDbContext context, IMapper mapper)
     {
@@ -27,7 +30,7 @@ public class BalanceChangedEventRepository : IBalanceChangedEventRepository
             .ContinueWith(t => t.Result.AsEnumerable());
     }
 
-    public async Task<BalanceChangedEventDto?> TryChangeBalanceAsync(Guid userId, Guid canvasId, long delta, string? reason)
+    public async Task<BalanceChangedEventDto?> TryChangeBalanceAsync(Guid userId, Guid canvasId, long delta, BalanceChangedReason reason)
     {
         await using var transaction = await _context.Database.BeginTransactionAsync();
         try
@@ -40,6 +43,7 @@ public class BalanceChangedEventRepository : IBalanceChangedEventRepository
             var newBalance = lastEntry?.NewBalance + delta ?? delta;
             if (newBalance < 0)
             {
+                await transaction.RollbackAsync();
                 return null;
             }
 
@@ -58,15 +62,11 @@ public class BalanceChangedEventRepository : IBalanceChangedEventRepository
             await transaction.CommitAsync();
             return _mapper.Map<BalanceChangedEventDto>(newEvent);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException ex)
         {
+            _logger.Error(ex, "Error updating balance for user {UserId} on canvas {CanvasId}", userId, canvasId);
             await transaction.RollbackAsync();
             return null;
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
         }
     }
     

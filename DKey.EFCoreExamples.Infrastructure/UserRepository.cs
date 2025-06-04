@@ -2,6 +2,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using DKey.EFCoreExamples.Domain;
 using DKey.EFCoreExamples.Domain.Repository;
+using DKey.EFCoreExamples.Shared;
 using DKey.EFCoreExamples.Shared.DTO;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,11 +13,17 @@ public class UserRepository : IUserRepository
     
     private readonly AppDbContext _context;
     private readonly IMapper _mapper;
+    private readonly IBalanceChangedEventRepository _balanceChangedEventRepository;
+    private readonly ISubscriptionRepository _subscriptionRepository;
+    private readonly AppDefaultsConfig _defaultsConfig;
 
-    public UserRepository(AppDbContext context, IMapper mapper)
+    public UserRepository(AppDbContext context, IMapper mapper, IBalanceChangedEventRepository balanceChangedEventRepository, ISubscriptionRepository subscriptionRepository, AppDefaultsConfig defaultsConfig)
     {
         _context = context;
         _mapper = mapper;
+        _balanceChangedEventRepository = balanceChangedEventRepository;
+        _subscriptionRepository = subscriptionRepository;
+        _defaultsConfig = defaultsConfig;
     }
 
     public async Task<UserDto?> GetByEmailAsync(string email)
@@ -59,15 +66,17 @@ public class UserRepository : IUserRepository
             existingUser.PasswordHashOrKey = userDto.PasswordHashOrKey;
             existingUser.LoginMethod = userDto.LoginMethod;
             _context.Users.Update(existingUser);
+            await transaction.CommitAsync();
         }
         else
         {
             var newUser = _mapper.Map<User>(userDto);
             _context.Users.Add(newUser);
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+            await _subscriptionRepository.Subscribe(newUser.Id, _defaultsConfig.DefaultCanvasId);
         }
 
-        await _context.SaveChangesAsync();
-        await transaction.CommitAsync();
 
         return await GetByEmailAsync(userDto.Email);
     }
@@ -92,3 +101,4 @@ public class UserRepository : IUserRepository
         .FirstOrDefaultAsync();
     }
 }
+

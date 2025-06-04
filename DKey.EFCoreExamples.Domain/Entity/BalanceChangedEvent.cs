@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using DKey.EFCoreExamples.Shared;
 
 namespace DKey.EFCoreExamples.Domain;
 
@@ -10,8 +11,7 @@ public class BalanceChangedEvent
     public long OldBalance { get; set; }
     public long NewBalance { get; set; }
     
-    [MaxLength(128)]
-    public string? Reason { get; set; }
+    public BalanceChangedReason Reason { get; set; }
     public DateTime ChangedAt { get; set; }
     
     

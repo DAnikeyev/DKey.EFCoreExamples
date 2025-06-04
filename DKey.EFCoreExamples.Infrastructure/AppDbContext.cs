@@ -39,6 +39,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(p => p.OwnerId);
             entity.Property(p => p.X);
             entity.Property(p => p.Y);
+            entity.Property(p => p.Price);
             entity.Property(p => p.ColorId);
             entity.HasOne(p => p.Owner).WithMany().HasForeignKey(p => p.OwnerId);
             entity.HasOne(p => p.Canvas).WithMany(c => c.Pixels).HasForeignKey(p => p.CanvasId);
@@ -49,9 +50,11 @@ public class AppDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.PixelId);
             entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.ChangedAt);
             entity.Property(e => e.OldOwnerUserId);
             entity.Property(e => e.OldColorId);
             entity.Property(e => e.NewColorId);
+            entity.Property(e => e.NewPrice);
             entity.Property(e => e.ChangedAt);
             entity.HasOne(e => e.Pixel).WithMany().HasForeignKey(e => e.PixelId);
             entity.HasOne(e => e.User).WithMany(u => u.PixelChangedEvents).HasForeignKey(e => e.UserId);

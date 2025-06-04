@@ -6,6 +6,6 @@ public interface IPixelRepository
 {
     Task<IEnumerable<PixelDto>> GetByCanvasIdAsync(Guid canvasId);
     Task<IEnumerable<PixelDto>> GetByOwnerIdAsync(Guid ownerId);
-    Task<PixelDto> TryChangePixelAsync(Guid ownerId, PixelDto pixel);
+    Task<PixelDto?> TryChangePixelAsync(Guid ownerId, PixelDto pixel);
 }
 
