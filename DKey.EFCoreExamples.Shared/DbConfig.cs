@@ -6,9 +6,9 @@ public class DbConfig
 {
     public string DefaultCanvasName { get; set; } = "Home";
 
-    public int DefaultCanvasWidth { get; set; } = 620;
+    public int DefaultCanvasWidth { get; set; } = 24;
 
-    public int DefaultCanvasHeight { get; set; } = 480;
+    public int DefaultCanvasHeight { get; set; } = 24;
     
     public List<ColorDto> Colors { get; set; } = new List<ColorDto>()
     {

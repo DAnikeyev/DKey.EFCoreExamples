@@ -58,43 +58,60 @@ public class UserRepository : IUserRepository
     public async Task<UserDto?> AddOrUpdateUserAsync(UserDto userDto, PasswordDto passwordDto)
     {
         await using var transaction = await _context.Database.BeginTransactionAsync();
-
-        var existingUser = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == userDto.Email);
-
-        if (existingUser != null)
+        try
         {
-            existingUser.UserName = userDto.UserName;
-            existingUser.PasswordHashOrKey = passwordDto.PasswordHashOrKey ?? existingUser.PasswordHashOrKey;
-            existingUser.LoginMethod = passwordDto.LoginMethod;
-            _context.Users.Update(existingUser);
-            await transaction.CommitAsync();
-        }
-        else
-        {
-            if(passwordDto.PasswordHashOrKey == null)
+            var existingUser = (userDto.Id != Guid.Empty) ?
+                await _context.Users.FirstOrDefaultAsync(u => u.Id == userDto.Id) : 
+                await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == userDto.Email);
+
+            if (existingUser != null)
             {
-                _logger.Error("Password hash or key is required for new user: {Email}", userDto.Email);
+                existingUser.Email = userDto.Email;
+                existingUser.UserName = userDto.UserName;
+                existingUser.PasswordHashOrKey = passwordDto.PasswordHashOrKey ?? existingUser.PasswordHashOrKey;
+                existingUser.LoginMethod = passwordDto.LoginMethod;
+                _context.Users.Update(existingUser);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            else
+            {
+                if(passwordDto.PasswordHashOrKey == null)
+                {
+                    _logger.Error("Password hash or key is required for new user: {Email}", userDto.Email);
+                    return null;
+                }
+                var newUser = _mapper.Map<User>(userDto);
+                newUser.PasswordHashOrKey = passwordDto.PasswordHashOrKey;
+                newUser.LoginMethod = passwordDto.LoginMethod;
+                newUser.Id = Guid.NewGuid();
+                _context.Users.Add(newUser);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                var mainCanvas = _context.Canvases.AsNoTracking().FirstOrDefault(x => x.Name == _defaultsConfig.DefaultCanvasName);
+                if (mainCanvas == null)
+                {
+                    throw new InvalidOperationException($"Main canvas with name '{_defaultsConfig.DefaultCanvasName}' not found.");
+                }
+
+                await _subscriptionRepository.Subscribe(newUser.Id, mainCanvas.Id, null);
+            }
+
+            var userInDb = await GetByEmailAsync(userDto.Email);
+            if (userInDb == null)
+            {
+                _logger.Error("Could not find user after adding/updating: {Email}", userDto.Email);
                 return null;
             }
-            var newUser = _mapper.Map<User>(userDto);
-            newUser.PasswordHashOrKey = passwordDto.PasswordHashOrKey;
-            newUser.LoginMethod = passwordDto.LoginMethod;
-            newUser.Id = Guid.NewGuid();
-            _context.Users.Add(newUser);
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
-            var mainCanvas = _context.Canvases.AsNoTracking().First(x => x.Name == _defaultsConfig.DefaultCanvasName);
-            await _subscriptionRepository.Subscribe(newUser.Id, mainCanvas.Id, null);
+            return await GetByEmailAsync(userDto.Email);
         }
-
-        var userInDb = await GetByEmailAsync(userDto.Email);
-        if (userInDb == null)
+        catch (Exception ex)
         {
-            _logger.Error("Could not find user after adding/updating: {Email}", userDto.Email);
+            _logger.Error(ex, "Error in AddOrUpdateUserAsync for user: {Email}", userDto.Email);
+            await transaction.RollbackAsync();
             return null;
         }
-        return await GetByEmailAsync(userDto.Email);
     }
 
     public async Task<UserDto?> DeleteUserAsync(UserDto userDto)

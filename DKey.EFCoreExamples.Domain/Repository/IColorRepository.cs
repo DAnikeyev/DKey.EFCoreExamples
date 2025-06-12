@@ -4,6 +4,6 @@ namespace DKey.EFCoreExamples.Domain.Repository;
 
 public interface IColorRepository
 {
-    public Task<IEnumerable<ColorDto>> GetAllColorsAsync();
+    public Task<IEnumerable<ColorDto>> GetAllAsync();
 }
 

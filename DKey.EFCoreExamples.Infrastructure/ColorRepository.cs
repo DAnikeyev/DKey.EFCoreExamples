@@ -17,7 +17,7 @@ public class ColorRepository : IColorRepository
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<ColorDto>> GetAllColorsAsync()
+    public async Task<IEnumerable<ColorDto>> GetAllAsync()
     {
         return await _context.Colors.ProjectTo<ColorDto>(_mapper.ConfigurationProvider).ToListAsync();
     }

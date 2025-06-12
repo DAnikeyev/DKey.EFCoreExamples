@@ -26,11 +26,4 @@
       <ProjectReference Include="..\DKey.EFCoreExamples.Infrastructure\DKey.EFCoreExamples.Infrastructure.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Create\" />
-      <Folder Include="Delete\" />
-      <Folder Include="Update\" />
-      <Folder Include="Read\" />
-    </ItemGroup>
-
 </Project>

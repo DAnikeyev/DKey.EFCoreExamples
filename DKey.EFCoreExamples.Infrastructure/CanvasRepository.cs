@@ -58,14 +58,14 @@ public class CanvasRepository : ICanvasRepository
         var pixels = new List<Pixel>();
         
         var defaultColor = await _context.Colors.AsNoTracking().FirstOrDefaultAsync(c => c.HexValue == "#FFFFFF");
-        if (defaultColor == null)
+         if (defaultColor == null)
         {
             Logger.Error("Default color not found, cannot create canvas.");
             return false;
         }
-        for (int x = 0; x < newCanvas.Width; x++)
+        for (var x = 0; x < newCanvas.Width; x++)
         {
-            for (int y = 0; y < newCanvas.Height; y++)
+            for (var y = 0; y < newCanvas.Height; y++)
             {
                 pixels.Add(new Pixel
                 {

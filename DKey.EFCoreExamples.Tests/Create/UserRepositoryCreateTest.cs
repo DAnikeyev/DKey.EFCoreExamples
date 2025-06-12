@@ -16,7 +16,7 @@ namespace DKey.EFCoreExamples.Tests.Create
             var userRepo = RepoManager.UserRepository;
             var user = new UserDto
             {
-                Email = "123",
+                Email = "123@gmail.com",
                 UserName = "TestUser",
                 LoginMethod = LoginMethod.Password,
             };

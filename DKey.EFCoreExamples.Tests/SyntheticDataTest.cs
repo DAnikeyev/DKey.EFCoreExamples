@@ -1,4 +1,5 @@
 using DKey.EFCoreExamples.Infrastructure;
+using DKey.EFCoreExamples.Shared;
 using Microsoft.EntityFrameworkCore;
 
 namespace DKey.EFCoreExamples.Tests;
@@ -21,6 +22,7 @@ internal class SyntheticDataTest
         DbHelper = new DbHelper(DbContext);
         DbContext.Database.EnsureDeleted();
         DbContext.Database.EnsureCreated();
+        DbSeeder.SeedDefaults(DbContext,new DbConfig(), DbHelper.Mapper, RepoManager.CanvasRepository);
         SeedData();
     }
 
