@@ -7,13 +7,13 @@ using DKey.EFCoreExamples.Shared;
 using Microsoft.EntityFrameworkCore;
 using NLog;
 
-namespace DKey.EFCoreExamples.Model;
+namespace DKey.EFCoreExamples.Infrastructure;
 
 public class BalanceChangedEventRepository : IBalanceChangedEventRepository
 {
     private IMapper _mapper;
     private AppDbContext _context;
-    private readonly ILogger _logger = NLog.LogManager.GetCurrentClassLogger();
+    private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
     
     public BalanceChangedEventRepository(AppDbContext context, IMapper mapper)
     {

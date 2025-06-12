@@ -6,7 +6,7 @@ using DKey.EFCoreExamples.Shared.DTO;
 using Microsoft.EntityFrameworkCore;
 using NLog;
 
-namespace DKey.EFCoreExamples.Model;
+namespace DKey.EFCoreExamples.Infrastructure;
 
 public class PixelRepository : IPixelRepository
 {

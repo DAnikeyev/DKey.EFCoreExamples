@@ -6,7 +6,7 @@ using DKey.EFCoreExamples.Shared.DTO;
 using Microsoft.EntityFrameworkCore;
 using NLog;
 
-namespace DKey.EFCoreExamples.Model;
+namespace DKey.EFCoreExamples.Infrastructure;
 
 public class CanvasRepository : ICanvasRepository
 {
@@ -41,14 +41,28 @@ public class CanvasRepository : ICanvasRepository
 
     public async Task<bool> TryAddCanvas(CanvasDto canvas, string? passwordHash)
     {
+        
         var newCanvas = _mapper.Map<Canvas>(canvas);
         newCanvas.Id = Guid.NewGuid();
         newCanvas.PasswordHash = passwordHash;
         var now = DateTime.UtcNow;
         newCanvas.CreatedAt = now;
         newCanvas.UpdatedAt = now;
-        // Generate pixels for the canvas
+
+        if (_context.Canvases.Any(c => c.Name == newCanvas.Name))
+        {
+            Logger.Error($"Canvas with name {newCanvas.Name} already exists.");
+            return false;
+        }
+        
         var pixels = new List<Pixel>();
+        
+        var defaultColor = await _context.Colors.AsNoTracking().FirstOrDefaultAsync(c => c.HexValue == "#FFFFFF");
+        if (defaultColor == null)
+        {
+            Logger.Error("Default color not found, cannot create canvas.");
+            return false;
+        }
         for (int x = 0; x < newCanvas.Width; x++)
         {
             for (int y = 0; y < newCanvas.Height; y++)
@@ -59,8 +73,8 @@ public class CanvasRepository : ICanvasRepository
                     X = x,
                     Y = y,
                     CanvasId = newCanvas.Id,
-                    ColorId = 0, // Default color, adjust as needed
-                    Price = 0 // Default price, adjust as needed
+                    ColorId = defaultColor.Id,
+                    Price = 0,
                 });
             }
         }

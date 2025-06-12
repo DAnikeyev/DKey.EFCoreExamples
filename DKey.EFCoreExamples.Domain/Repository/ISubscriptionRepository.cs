@@ -6,6 +6,6 @@ public interface ISubscriptionRepository
 {
     Task<IEnumerable<SubscriptionDto>> GetByUserIdAsync(Guid userId);
     Task<IEnumerable<SubscriptionDto>> GetByCanvasIdAsync(Guid canvasId);
-    Task<SubscriptionDto> Subscribe(Guid userId, Guid canvasId);
+    Task<SubscriptionDto> Subscribe(Guid userId, Guid canvasId, string? passwordHash = null);
 }
 

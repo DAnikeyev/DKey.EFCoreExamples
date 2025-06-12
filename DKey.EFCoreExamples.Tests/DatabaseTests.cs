@@ -1,6 +1,6 @@
 using NUnit.Framework;
 using Microsoft.EntityFrameworkCore;
-using DKey.EFCoreExamples.Model;
+using DKey.EFCoreExamples.Infrastructure;
 
 namespace DKey.EFCoreExamples.Tests
 {

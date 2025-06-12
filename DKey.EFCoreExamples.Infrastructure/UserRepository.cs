@@ -5,8 +5,9 @@ using DKey.EFCoreExamples.Domain.Repository;
 using DKey.EFCoreExamples.Shared;
 using DKey.EFCoreExamples.Shared.DTO;
 using Microsoft.EntityFrameworkCore;
+using NLog;
 
-namespace DKey.EFCoreExamples.Model;
+namespace DKey.EFCoreExamples.Infrastructure;
 
 public class UserRepository : IUserRepository
 {
@@ -15,9 +16,10 @@ public class UserRepository : IUserRepository
     private readonly IMapper _mapper;
     private readonly IBalanceChangedEventRepository _balanceChangedEventRepository;
     private readonly ISubscriptionRepository _subscriptionRepository;
-    private readonly AppDefaultsConfig _defaultsConfig;
+    private readonly DbConfig _defaultsConfig;
+    private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
-    public UserRepository(AppDbContext context, IMapper mapper, IBalanceChangedEventRepository balanceChangedEventRepository, ISubscriptionRepository subscriptionRepository, AppDefaultsConfig defaultsConfig)
+    public UserRepository(AppDbContext context, IMapper mapper, IBalanceChangedEventRepository balanceChangedEventRepository, ISubscriptionRepository subscriptionRepository, DbConfig defaultsConfig)
     {
         _context = context;
         _mapper = mapper;
@@ -53,7 +55,7 @@ public class UserRepository : IUserRepository
             .FirstOrDefaultAsync();
     }
 
-    public async Task<UserDto?> AddOrUpdateUserAsync(UserDto userDto)
+    public async Task<UserDto?> AddOrUpdateUserAsync(UserDto userDto, PasswordDto passwordDto)
     {
         await using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -63,21 +65,35 @@ public class UserRepository : IUserRepository
         if (existingUser != null)
         {
             existingUser.UserName = userDto.UserName;
-            existingUser.PasswordHashOrKey = userDto.PasswordHashOrKey;
-            existingUser.LoginMethod = userDto.LoginMethod;
+            existingUser.PasswordHashOrKey = passwordDto.PasswordHashOrKey ?? existingUser.PasswordHashOrKey;
+            existingUser.LoginMethod = passwordDto.LoginMethod;
             _context.Users.Update(existingUser);
             await transaction.CommitAsync();
         }
         else
         {
+            if(passwordDto.PasswordHashOrKey == null)
+            {
+                _logger.Error("Password hash or key is required for new user: {Email}", userDto.Email);
+                return null;
+            }
             var newUser = _mapper.Map<User>(userDto);
+            newUser.PasswordHashOrKey = passwordDto.PasswordHashOrKey;
+            newUser.LoginMethod = passwordDto.LoginMethod;
+            newUser.Id = Guid.NewGuid();
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
-            await _subscriptionRepository.Subscribe(newUser.Id, _defaultsConfig.DefaultCanvasId);
+            var mainCanvas = _context.Canvases.AsNoTracking().First(x => x.Name == _defaultsConfig.DefaultCanvasName);
+            await _subscriptionRepository.Subscribe(newUser.Id, mainCanvas.Id, null);
         }
 
-
+        var userInDb = await GetByEmailAsync(userDto.Email);
+        if (userInDb == null)
+        {
+            _logger.Error("Could not find user after adding/updating: {Email}", userDto.Email);
+            return null;
+        }
         return await GetByEmailAsync(userDto.Email);
     }
 
@@ -96,7 +112,7 @@ public class UserRepository : IUserRepository
     {
         return _context.Users
         .AsNoTracking()
-        .Where(u => u.Email == userDto.Email && u.PasswordHashOrKey == passwordDto.PasswordHashOrKey)
+        .Where(u => u.Email == userDto.Email && u.PasswordHashOrKey == passwordDto.PasswordHashOrKey && u.LoginMethod == passwordDto.LoginMethod)
         .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
         .FirstOrDefaultAsync();
     }

@@ -2,6 +2,6 @@
 
 public enum LoginMethod
 {
-    Local = 1,   // Email/password
+    Password = 1,   // Email/password
     Google = 2,  // Google OAuth
 }

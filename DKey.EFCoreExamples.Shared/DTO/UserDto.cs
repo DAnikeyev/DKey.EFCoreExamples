@@ -6,8 +6,6 @@ public class UserDto
     public string UserName { get; set; } = null!;
     
     public string Email { get; set; } = null!;
-
-    public string PasswordHashOrKey { get; set; } = null!;
     
     public LoginMethod LoginMethod { get; set; }
 }

@@ -1,7 +1,7 @@
 ﻿using DKey.EFCoreExamples.Domain;
 using Microsoft.EntityFrameworkCore;
 
-namespace DKey.EFCoreExamples.Model;
+namespace DKey.EFCoreExamples.Infrastructure;
 
 public class AppDbContext : DbContext
 {
