@@ -41,7 +41,7 @@ public class SubscriptionRepository : ISubscriptionRepository
             .ToListAsync();
     }
 
-    public async Task<SubscriptionDto> Subscribe(Guid userId, Guid canvasId, string? passwordHash)
+    public async Task<SubscriptionDto?> Subscribe(Guid userId, Guid canvasId, string? passwordHash)
     {
         await using var transaction = await _context.Database.BeginTransactionAsync();
         try
@@ -50,15 +50,15 @@ public class SubscriptionRepository : ISubscriptionRepository
                 .AsNoTracking()
                 .FirstOrDefaultAsync(s => s.UserId == userId && s.CanvasId == canvasId);
 
-            var canavas = await _context.Canvases
+            var canvas = await _context.Canvases
                 .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.Id == canvasId);
-            if (canavas == null)
+            if (canvas == null)
             {
                 _logger.Warn("Canvas not found. userId={UserId}, canvasId={CanvasId}", userId, canvasId);
                 throw new InvalidOperationException("Canvas not found.");
             }
-            if (canavas.PasswordHash != passwordHash)
+            if (canvas.PasswordHash != passwordHash)
             {
                 _logger.Warn("Invalid password for the canvas. userId={UserId}, canvasId={CanvasId}", userId, canvasId);
                 throw new InvalidOperationException("Invalid password for the canvas.");
@@ -86,8 +86,32 @@ public class SubscriptionRepository : ISubscriptionRepository
         {
             await transaction.RollbackAsync();
             _logger.Error(ex, "Error subscribing user. userId={UserId}, canvasId={CanvasId}", userId, canvasId);
-            throw;
+            return null;
         }
+    }
+
+    public async Task<SubscriptionDto?> Unsubscribe(Guid userId, Guid canvasId)
+    {
+
+        var sub = _context.Subscriptions.Where(x => x.UserId == userId && x.CanvasId == canvasId).FirstOrDefault();
+
+        if (sub is null)
+        {
+            return null;
+        }
+
+        var balance = await _balanceChangedEventRepository.GetByUserAndCanvasIdAsync(userId, canvasId);
+        // ReSharper disable once PossibleMultipleEnumeration
+        if (balance.Any())
+        {
+            // ReSharper disable once PossibleMultipleEnumeration
+            var delta = -balance.Last().NewBalance;
+            await _balanceChangedEventRepository.TryChangeBalanceAsync(userId, canvasId, delta, BalanceChangedReason.Unsubscription);
+        }
+
+        _context.Subscriptions.Remove(sub);
+        await _context.SaveChangesAsync();
+        return _mapper.Map<SubscriptionDto>(sub);
     }
 }
 

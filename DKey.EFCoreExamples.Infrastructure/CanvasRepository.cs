@@ -55,34 +55,16 @@ public class CanvasRepository : ICanvasRepository
             return false;
         }
         
-        var pixels = new List<Pixel>();
-        
         var defaultColor = await _context.Colors.AsNoTracking().FirstOrDefaultAsync(c => c.HexValue == "#FFFFFF");
          if (defaultColor == null)
         {
             Logger.Error("Default color not found, cannot create canvas.");
             return false;
         }
-        for (var x = 0; x < newCanvas.Width; x++)
-        {
-            for (var y = 0; y < newCanvas.Height; y++)
-            {
-                pixels.Add(new Pixel
-                {
-                    Id = Guid.NewGuid(),
-                    X = x,
-                    Y = y,
-                    CanvasId = newCanvas.Id,
-                    ColorId = defaultColor.Id,
-                    Price = 0,
-                });
-            }
-        }
         try
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
             await _context.Canvases.AddAsync(newCanvas);
-            await _context.Pixels.AddRangeAsync(pixels);
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
             return true;

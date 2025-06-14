@@ -79,8 +79,7 @@ public class UserRepository : IUserRepository
             {
                 if(passwordDto.PasswordHashOrKey == null)
                 {
-                    _logger.Error("Password hash or key is required for new user: {Email}", userDto.Email);
-                    return null;
+                    throw new InvalidDataException($"Password hash or key is required for new user: {userDto.Email}");
                 }
                 var newUser = _mapper.Map<User>(userDto);
                 newUser.PasswordHashOrKey = passwordDto.PasswordHashOrKey;
@@ -101,8 +100,7 @@ public class UserRepository : IUserRepository
             var userInDb = await GetByEmailAsync(userDto.Email);
             if (userInDb == null)
             {
-                _logger.Error("Could not find user after adding/updating: {Email}", userDto.Email);
-                return null;
+                throw new InvalidOperationException($"Could not find user after adding/updating: {userDto.Email}");
             }
             return await GetByEmailAsync(userDto.Email);
         }

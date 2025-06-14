@@ -1,7 +1,6 @@
 using AutoMapper;
 using DKey.EFCoreExamples.Domain.Repository;
 using DKey.EFCoreExamples.Shared;
-using Microsoft.EntityFrameworkCore;
 
 namespace DKey.EFCoreExamples.Infrastructure;
 

@@ -25,6 +25,17 @@ public class BalanceChangedEventRepository : IBalanceChangedEventRepository
     {
         return await _context.BalanceChangedEvents.AsNoTracking()
             .Where(e => e.UserId == userId)
+            .OrderByDescending(x => x.ChangedAt)
+            .ProjectTo<BalanceChangedEventDto>(_mapper.ConfigurationProvider)
+            .ToListAsync()
+            .ContinueWith(t => t.Result.AsEnumerable());
+    }
+
+    public async Task<IEnumerable<BalanceChangedEventDto>> GetByUserAndCanvasIdAsync(Guid userId, Guid CanvasId)
+    {
+        return await _context.BalanceChangedEvents.AsNoTracking()
+            .Where(e => e.UserId == userId && e.CanvasId == CanvasId)
+            .OrderByDescending(x => x.ChangedAt)
             .ProjectTo<BalanceChangedEventDto>(_mapper.ConfigurationProvider)
             .ToListAsync()
             .ContinueWith(t => t.Result.AsEnumerable());

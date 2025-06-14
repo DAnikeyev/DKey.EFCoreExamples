@@ -46,7 +46,25 @@ public class PixelRepository : IPixelRepository
         try
         {
             var existingPixel = await _context.Pixels.AsNoTracking()
-                .FirstAsync(p => p.Id == pixel.Id);
+                .FirstOrDefaultAsync(p => p.Id == pixel.Id);
+            if (existingPixel == null)
+            {
+                //Add pixel
+                var addedPixel = new Pixel()
+                {
+                    Id = pixel.Id,
+                    CanvasId = pixel.CanvasId,
+                    OwnerId = null,
+                    ColorId = pixel.ColorId,
+                    X = pixel.X,
+                    Y = pixel.Y,
+                    Price = 0,
+                };
+                _context.Pixels.Add(addedPixel);
+                await _context.SaveChangesAsync();
+                existingPixel = addedPixel;
+            }
+
             var price = existingPixel.Price + 1;
             var balanceEvent = await _context.BalanceChangedEvents.AsNoTracking().Where(x => x.UserId == ownerId).OrderByDescending(x => x.ChangedAt)
                 .FirstOrDefaultAsync();
