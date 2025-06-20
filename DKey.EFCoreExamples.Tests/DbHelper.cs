@@ -19,13 +19,13 @@ namespace DKey.EFCoreExamples.Tests
 
         public static IMapper Mapper => TestMapper.Instance;
 
-        public async Task<UserDto?> AddDefaultUser()
+        public async Task<UserDto?> AddDefaultUser(string name = "TestUser")
         {
             var userRepo = RepositoryManager.UserRepository;
             var user = new UserDto
             {
-                Email = "123@gmail.com",
-                UserName = "TestUser",
+                Email = $"{name}@gmail.com",
+                UserName = name,
                 LoginMethod = LoginMethod.Password,
             };
             var passwordDto = new PasswordDto
@@ -37,6 +37,4 @@ namespace DKey.EFCoreExamples.Tests
             return await userRepo.AddOrUpdateUserAsync(user, passwordDto);
         }
     }
-
 }
-

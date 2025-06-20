@@ -1,10 +1,5 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using DKey.EFCoreExamples.Infrastructure;
 using DKey.EFCoreExamples.Shared;
 using DKey.EFCoreExamples.Shared.DTO;
-using NUnit.Framework;
 
 namespace DKey.EFCoreExamples.Tests.Create
 {

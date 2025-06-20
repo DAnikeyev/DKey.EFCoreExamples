@@ -5,7 +5,7 @@ namespace DKey.EFCoreExamples.Shared;
 public class DbConfig
 {
     public string DefaultCanvasName { get; set; } = "Home";
-
+    public string MasterPasswordHash { get; set; } = "MasterPasswordHash";
     public int DefaultCanvasWidth { get; set; } = 24;
 
     public int DefaultCanvasHeight { get; set; } = 24;

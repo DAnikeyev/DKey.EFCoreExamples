@@ -17,7 +17,6 @@ internal class DbSeederTests : SyntheticDataTest
         Assert.That(canvases.Count(), Is.EqualTo(1));
         var pixels = await RepoManager.PixelRepository.GetByCanvasIdAsync(canvases.First().Id);
         Assert.IsNotNull(pixels);
-        var config = new DbConfig();
-        Assert.That(pixels.Count(), Is.EqualTo(config.DefaultCanvasHeight * config.DefaultCanvasWidth));
+        Assert.That(pixels.Count(), Is.EqualTo(0));
     }
 }

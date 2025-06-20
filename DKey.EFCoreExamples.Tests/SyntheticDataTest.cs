@@ -9,6 +9,7 @@ internal class SyntheticDataTest
     protected AppDbContext DbContext;
     protected DbContextOptions<AppDbContext> Options;
     protected DbHelper DbHelper;
+    protected DbConfig DefaultConfig = new DbConfig();
     
     internal RepositoryManager RepoManager => DbHelper.RepositoryManager;
     

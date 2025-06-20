@@ -20,7 +20,7 @@ public class RepositoryManager
     {
         LoginEventRepository = new LoginEventRepository(context, mapper);
         BalanceChangedEventRepository = new BalanceChangedEventRepository(context, mapper);
-        CanvasRepository = new CanvasRepository(context, mapper);
+        CanvasRepository = new CanvasRepository(context, mapper, config.MasterPasswordHash, config.DefaultCanvasName);
         ColorRepository = new ColorRepository(context, mapper);
         SubscriptionRepository = new SubscriptionRepository(context, mapper, BalanceChangedEventRepository);
         UserRepository = new UserRepository(context, mapper, BalanceChangedEventRepository, SubscriptionRepository, config);

@@ -28,7 +28,7 @@ public class DbSeeder
                 UpdatedAt = DateTime.UtcNow
             };
             var addedDefault = await canvasRepository.TryAddCanvas(canvas, null);
-            if (!addedDefault)
+            if (addedDefault is null)
             {
                 throw new InvalidOperationException($"Failed to add default canvas with name {defaultCanvasName}");
             }
@@ -61,7 +61,7 @@ public class DbSeeder
             var addedDefaultTask = canvasRepository.TryAddCanvas(canvas, null);
             addedDefaultTask.Wait();
             var addedDefault = addedDefaultTask.Result;
-            if (!addedDefault)
+            if (addedDefault is null)
             {
                 throw new InvalidOperationException($"Failed to add default canvas with name {defaultCanvasName}");
             }

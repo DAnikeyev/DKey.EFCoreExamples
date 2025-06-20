@@ -92,7 +92,6 @@ public class SubscriptionRepository : ISubscriptionRepository
 
     public async Task<SubscriptionDto?> Unsubscribe(Guid userId, Guid canvasId)
     {
-
         var sub = _context.Subscriptions.Where(x => x.UserId == userId && x.CanvasId == canvasId).FirstOrDefault();
 
         if (sub is null)

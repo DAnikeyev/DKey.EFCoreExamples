@@ -11,12 +11,16 @@ namespace DKey.EFCoreExamples.Infrastructure;
 public class CanvasRepository : ICanvasRepository
 {
     private readonly IMapper _mapper;
+    private readonly string _masterPasswordHash;
+    private readonly string _defaultCanvasName;
     private readonly AppDbContext _context;
     private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
     
-    public CanvasRepository(AppDbContext context, IMapper mapper)
+    public CanvasRepository(AppDbContext context, IMapper mapper, string masterPasswordHash, string defaultCanvasName)
     {
         _mapper = mapper;
+        _masterPasswordHash = masterPasswordHash;
+        _defaultCanvasName = defaultCanvasName;
         _context = context;
     }
 
@@ -34,12 +38,79 @@ public class CanvasRepository : ICanvasRepository
             .FirstOrDefaultAsync();
     }
 
-    public async Task<IEnumerable<CanvasDto>> GetAllAsync()
+    public async Task<IEnumerable<CanvasDto>> GetAllAsync(bool includePrivate = false)
     {
-        return await _context.Canvases.AsNoTracking().ProjectTo<CanvasDto>(_mapper.ConfigurationProvider).ToListAsync();
+        if(includePrivate)
+            return await _context.Canvases.AsNoTracking().ProjectTo<CanvasDto>(_mapper.ConfigurationProvider).ToListAsync();
+        else
+            return await _context.Canvases.AsNoTracking()
+                .Where(c => c.PasswordHash == null)
+                .ProjectTo<CanvasDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
     }
 
-    public async Task<bool> TryAddCanvas(CanvasDto canvas, string? passwordHash)
+    
+    //ToDo: Do we need to remove subsciptions and pixels?
+    public async Task<bool> TryDeleteCanvasByName(string name, string passwordHash)
+    {
+        var canvas = await _context.Canvases
+            .FirstOrDefaultAsync(c => c.Name == name);
+        if (canvas == null)
+        {
+            Logger.Warn($"Canvas with name {name} and provided password hash not found.");
+            return false;
+        }
+        
+        
+        if (canvas.Name == _defaultCanvasName)
+        {
+            Logger.Warn($"Cannot delete default canvas with deafult name {_defaultCanvasName}.");
+            return false;
+        }
+        
+        var passwordMatch = (canvas.PasswordHash is not null && canvas.PasswordHash == passwordHash) || passwordHash == _masterPasswordHash;
+        
+        if(!passwordMatch)
+        {
+            Logger.Warn($"Canvas with name {name} found, but password hash does not match.");
+            return false;
+        }
+        _context.Canvases.Remove(canvas);
+        try
+        {
+            await _context.SaveChangesAsync();
+            Logger.Info($"Canvas with name {name} deleted successfully.");
+            return true;
+        }
+        catch (DbUpdateException ex)
+        {
+            Logger.Error(ex, $"Error deleting canvas with name {name}.");
+            return false;
+        }
+    }
+
+    public async Task<bool> CheckPassword(CanvasDto canvas, string? passwordHash)
+    {
+        var canvasInDb = await _context.Canvases
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == canvas.Id);
+        
+        if (canvasInDb == null)
+        {
+            Logger.Warn($"Canvas with ID {canvas.Id} not found for password check.");
+            return false; // Canvas not found
+        }
+        
+        if (canvasInDb.PasswordHash == null && passwordHash == null)
+            return true; // No password set, no password provided
+        
+        if (canvasInDb.PasswordHash == null || passwordHash == null)
+            return false; // One is set, the other is not
+        
+        return canvasInDb.PasswordHash == passwordHash; // Both are set, check equality
+    }
+
+    public async Task<CanvasDto?> TryAddCanvas(CanvasDto canvas, string? passwordHash)
     {
         
         var newCanvas = _mapper.Map<Canvas>(canvas);
@@ -52,14 +123,14 @@ public class CanvasRepository : ICanvasRepository
         if (_context.Canvases.Any(c => c.Name == newCanvas.Name))
         {
             Logger.Error($"Canvas with name {newCanvas.Name} already exists.");
-            return false;
+            return null;
         }
         
         var defaultColor = await _context.Colors.AsNoTracking().FirstOrDefaultAsync(c => c.HexValue == "#FFFFFF");
          if (defaultColor == null)
         {
             Logger.Error("Default color not found, cannot create canvas.");
-            return false;
+            return null;
         }
         try
         {
@@ -67,12 +138,22 @@ public class CanvasRepository : ICanvasRepository
             await _context.Canvases.AddAsync(newCanvas);
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
-            return true;
+            var canvasInDb = await _context.Canvases 
+                .AsNoTracking()
+                .Where(c => c.Id == newCanvas.Id)
+                .ProjectTo<CanvasDto>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync();
+            if (canvasInDb == null)
+            {
+                Logger.Error($"Canvas with ID {newCanvas.Id} was not found after adding.");
+                return null;
+            }
+            return canvasInDb;
         }
         catch (DbUpdateException ex)
         {
             Logger.Error(ex, "Error adding canvas or pixels");
-            return false;
+            return null;
         }
     }
 }

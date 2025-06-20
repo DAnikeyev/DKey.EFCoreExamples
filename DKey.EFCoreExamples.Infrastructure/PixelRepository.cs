@@ -13,7 +13,7 @@ public class PixelRepository : IPixelRepository
     private readonly AppDbContext _context;
     private readonly IMapper _mapper;
     private readonly IBalanceChangedEventRepository _balanceChangedEventRepository;
-    private static readonly ILogger Logger = NLog.LogManager.GetCurrentClassLogger();
+    private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
 
     public PixelRepository(AppDbContext context, IMapper mapper, IBalanceChangedEventRepository balanceChangedEventRepository)
     {
@@ -45,14 +45,14 @@ public class PixelRepository : IPixelRepository
         await using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
-            var existingPixel = await _context.Pixels.AsNoTracking()
-                .FirstOrDefaultAsync(p => p.Id == pixel.Id);
+            var existingPixel = await _context.Pixels
+                .FirstOrDefaultAsync(p => p.CanvasId == pixel.CanvasId && pixel.X == p.X && pixel.Y == p.Y);
             if (existingPixel == null)
             {
                 //Add pixel
                 var addedPixel = new Pixel()
                 {
-                    Id = pixel.Id,
+                    Id = new Guid(),
                     CanvasId = pixel.CanvasId,
                     OwnerId = null,
                     ColorId = pixel.ColorId,
@@ -82,17 +82,20 @@ public class PixelRepository : IPixelRepository
                 throw new InvalidOperationException("Insufficient balance to change the pixel.");
             }
 
-            var balanceUpdate = await _balanceChangedEventRepository.TryChangeBalanceAsync(ownerId, pixel.CanvasId, -paid, BalanceChangedReason.PixelPayment);
+            var balanceUpdate = await TryChangeBalanceAsync(ownerId, pixel.CanvasId, -paid, BalanceChangedReason.PixelPayment);
             
             if (balanceUpdate == null)
             {
                 throw new InvalidOperationException("Failed to update balance.");
             }
-            var newPixel = _mapper.Map<Pixel>(pixel);
-            _context.Pixels.Update(newPixel);
+            existingPixel.Price = paid;
+            existingPixel.OwnerId = ownerId;
+            existingPixel.ColorId = pixel.ColorId;
+            _context.Pixels.Update(existingPixel);
             await _context.SaveChangesAsync();
+            Logger.Info($"Pixel changed successfully. PixelId={existingPixel.Id}, OwnerId={ownerId}, CanvasId={pixel.CanvasId}, Price={paid}");
             await transaction.CommitAsync();
-            return _mapper.Map<PixelDto>(newPixel);
+            return _mapper.Map<PixelDto>(existingPixel);
         }
         catch (Exception ex)
         {
@@ -100,5 +103,32 @@ public class PixelRepository : IPixelRepository
             await transaction.RollbackAsync();
             return null;
         }
+    }
+
+    private async Task<BalanceChangedEvent?> TryChangeBalanceAsync(Guid userId, Guid canvasId, long delta, BalanceChangedReason reason)
+    {         
+        var lastEntry = await _context.BalanceChangedEvents
+            .Where(e => e.UserId == userId && e.CanvasId == canvasId)
+            .OrderByDescending(e => e.ChangedAt)
+            .FirstOrDefaultAsync();
+
+        var newBalance = lastEntry?.NewBalance + delta ?? delta;
+        if (newBalance < 0)
+        {
+            return null;
+        }
+
+        var newEvent = new BalanceChangedEvent
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            CanvasId = canvasId,
+            ChangedAt = DateTime.UtcNow,
+            NewBalance = newBalance,
+            OldBalance = lastEntry?.NewBalance ?? 0,
+            Reason = reason,
+        };
+        await _context.BalanceChangedEvents.AddAsync(newEvent);
+        return newEvent;
     }
 }

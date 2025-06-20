@@ -93,7 +93,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Canvas>(entity =>
         {
             entity.HasKey(c => c.Id);
-            entity.Property(c => c.Name);
+            entity.HasIndex(c => c.Name).IsUnique();
             entity.Property(c => c.Width);
             entity.Property(c => c.Height);
             entity.Property(c => c.CreatedAt);
