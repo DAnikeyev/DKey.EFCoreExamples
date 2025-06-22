@@ -42,6 +42,19 @@ public class PixelRepository : IPixelRepository
 
     public async Task<PixelDto?> TryChangePixelAsync(Guid ownerId, PixelDto pixel)
     {
+        var canvas = await _context.Canvases
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == pixel.CanvasId);
+        if (canvas == null)
+        {
+            Logger.Warn($"Canvas with ID {pixel.CanvasId} not found.");
+            return null;
+        }
+        if (canvas.Height < pixel.Y || canvas.Width < pixel.X || pixel.X < 0 || pixel.Y < 0)
+        {
+            Logger.Warn($"Pixel coordinates ({pixel.X}, {pixel.Y}) are out of bounds for canvas {canvas.Name} (Width: {canvas.Width}, Height: {canvas.Height}).");
+            return null;
+        }
         await using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
@@ -88,10 +101,23 @@ public class PixelRepository : IPixelRepository
             {
                 throw new InvalidOperationException("Failed to update balance.");
             }
+            
+            var pixelChangedEvent = new PixelChangedEvent
+            {
+                Id = Guid.NewGuid(),
+                PixelId = existingPixel.Id,
+                OldOwnerUserId = existingPixel.OwnerId, 
+                OwnerUserId= ownerId,
+                OldColorId = existingPixel.ColorId,
+                NewColorId = pixel.ColorId,
+                NewPrice = paid,
+                ChangedAt = DateTime.UtcNow,
+            };
             existingPixel.Price = paid;
             existingPixel.OwnerId = ownerId;
             existingPixel.ColorId = pixel.ColorId;
             _context.Pixels.Update(existingPixel);
+            await _context.PixelChangedEvents.AddAsync(pixelChangedEvent);
             await _context.SaveChangesAsync();
             Logger.Info($"Pixel changed successfully. PixelId={existingPixel.Id}, OwnerId={ownerId}, CanvasId={pixel.CanvasId}, Price={paid}");
             await transaction.CommitAsync();

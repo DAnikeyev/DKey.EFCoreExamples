@@ -28,7 +28,7 @@ public class AppDbContext : DbContext
             entity.Property(u => u.PasswordHashOrKey);
             entity.Property(u => u.CreatedAt);
             entity.HasMany(u => u.LoginEvents).WithOne(e => e.User).HasForeignKey(e => e.UserId);
-            entity.HasMany(u => u.PixelChangedEvents).WithOne(e => e.User).HasForeignKey(e => e.UserId);
+            entity.HasMany(u => u.PixelChangedEvents).WithOne(e => e.User).HasForeignKey(e => e.OwnerUserId);
             entity.HasMany(u => u.BalanceChangedEvents).WithOne(e => e.User).HasForeignKey(e => e.UserId);
         });
 
@@ -49,7 +49,7 @@ public class AppDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.PixelId);
-            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.OwnerUserId);
             entity.HasIndex(e => e.ChangedAt);
             entity.Property(e => e.OldOwnerUserId);
             entity.Property(e => e.OldColorId);
@@ -57,7 +57,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.NewPrice);
             entity.Property(e => e.ChangedAt);
             entity.HasOne(e => e.Pixel).WithMany().HasForeignKey(e => e.PixelId);
-            entity.HasOne(e => e.User).WithMany(u => u.PixelChangedEvents).HasForeignKey(e => e.UserId);
+            entity.HasOne(e => e.User).WithMany(u => u.PixelChangedEvents).HasForeignKey(e => e.OwnerUserId);
             entity.HasOne(e => e.OldOwnerUser).WithMany().HasForeignKey(e => e.OldOwnerUserId);
         });
 
@@ -107,11 +107,12 @@ public class AppDbContext : DbContext
             entity.HasKey(e => new { e.UserId, e.CanvasId });
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.CanvasId);
-            entity.HasOne<User>()
+            entity.HasOne(e => e.User)
                 .WithMany(u => u.Subscriptions)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
-            entity.HasOne<Canvas>()
+
+            entity.HasOne(e => e.Canvas)
                 .WithMany(c => c.Subscriptions)
                 .HasForeignKey(e => e.CanvasId)
                 .OnDelete(DeleteBehavior.Cascade);

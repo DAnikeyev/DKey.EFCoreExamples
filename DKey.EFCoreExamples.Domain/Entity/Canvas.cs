@@ -24,7 +24,5 @@ public class Canvas
     
     public ICollection<Pixel> Pixels { get; set; }
 
-    public ICollection<User> Subscribers { get; set; } = new List<User>();
-
     public ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
 }

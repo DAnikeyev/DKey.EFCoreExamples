@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DKey.EFCoreExamples.Infrastructure;
 
+//ToDo: Add tests.
 public class LoginEventRepository: ILoginEventRepository
 {
     private readonly AppDbContext _context;

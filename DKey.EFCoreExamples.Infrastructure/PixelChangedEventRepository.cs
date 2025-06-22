@@ -1,5 +1,6 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using DKey.EFCoreExamples.Domain;
 using DKey.EFCoreExamples.Domain.Repository;
 using DKey.EFCoreExamples.Shared.DTO;
 using Microsoft.EntityFrameworkCore;
@@ -21,7 +22,7 @@ public class PixelChangedEventRepository : IPixelChangedEventRepository
     {
         return await _context.PixelChangedEvents
             .AsNoTracking()
-            .Where(e => e.UserId == userId)
+            .Where(e => e.OwnerUserId == userId)
             .ProjectTo<PixelChangedEventDto>(_mapper.ConfigurationProvider).ToListAsync();
     }
 
@@ -37,7 +38,7 @@ public class PixelChangedEventRepository : IPixelChangedEventRepository
     {
         var query = _context.PixelChangedEvents
             .AsNoTracking()
-            .Where(e => e.Pixel.CanvasId == canvasId);
+            .Where(e => e.Pixel != null && e.Pixel.CanvasId == canvasId);
 
         if (startDate.HasValue)
         {
@@ -47,5 +48,23 @@ public class PixelChangedEventRepository : IPixelChangedEventRepository
         return await query
             .ProjectTo<PixelChangedEventDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
+    }
+    
+    public async Task<bool> AddPixelChangedEvent(PixelChangedEventDto pixelChangedEventDto)
+    {
+        try
+        {
+            var pixelChangedEvent = _mapper.Map<PixelChangedEvent>(pixelChangedEventDto);
+            pixelChangedEvent.ChangedAt = DateTime.UtcNow;
+            await _context.PixelChangedEvents.AddAsync(pixelChangedEvent);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error adding PixelChangedEvent: {ex.Message}");
+            return false;
+        }
+
     }
 }

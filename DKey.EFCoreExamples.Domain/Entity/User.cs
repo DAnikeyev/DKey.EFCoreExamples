@@ -23,8 +23,6 @@ public class User
     public ICollection<LoginEvent> LoginEvents { get; set; } = new List<LoginEvent>();
     public ICollection<PixelChangedEvent> PixelChangedEvents { get; set; } = new List<PixelChangedEvent>();
     public ICollection<BalanceChangedEvent> BalanceChangedEvents { get; set; } = new List<BalanceChangedEvent>();
-
-    public ICollection<Canvas> SubscribedCanvases { get; set; } = new List<Canvas>();
     public ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
 }
 

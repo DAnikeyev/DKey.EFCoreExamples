@@ -13,6 +13,7 @@ internal class SyntheticDataTest
     
     internal RepositoryManager RepoManager => DbHelper.RepositoryManager;
     
+    //ToDo: Clear instead of delete.
     [SetUp]
     public virtual void Init()
     {

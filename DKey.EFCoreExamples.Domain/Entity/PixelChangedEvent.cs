@@ -6,8 +6,8 @@ public class PixelChangedEvent
     
     public Guid PixelId { get; set; }
     
-    public Guid OldOwnerUserId { get; set; }
-    public Guid UserId { get; set; }
+    public Guid? OldOwnerUserId { get; set; }
+    public Guid OwnerUserId { get; set; }
     
     public int OldColorId { get; set; }
     
